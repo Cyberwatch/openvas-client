@@ -2,8 +2,8 @@ require 'openvas_api/version'
 require 'nokogiri'
 require 'active_support/all'
 
-module OpenvasApi
-  class OpenVASOMP
+module OpenVASApi
+  class OpenVASAgent
 
     def initialize(host = 'localhost', port = 9390, user = 'admin', password = 'openvas')
       @host = host
@@ -27,7 +27,7 @@ module OpenvasApi
 
     def version
       version = Nokogiri::XML(sendrecv('<get_version/>')).xpath('//version').text
-      p 'Version : ' + version
+      'Version : ' + version
     end
 
     def authenticate
@@ -65,7 +65,7 @@ module OpenvasApi
     def scanners
       users = Nokogiri::XML(sendrecv('<get_scanners/>'))
       # Get default Scanner
-      p users.css('scanner')[0][:id]
+      users.css('scanner')[0][:id]
     end
 
     def create_target(name, hosts)
