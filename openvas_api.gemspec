@@ -9,8 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Vincent Charretier"]
   spec.email         = ["vincent@cyberwatch.fr"]
 
-  spec.summary       = %q{TODO: Write a short summary, because Rubygems requires one.}
-  spec.description   = %q{TODO: Write a longer description or delete this line.}
+  spec.summary       = 'This Ruby gem is used to communicate with OpenVAS manager thanks to OMP. You can among other things start a scan and get reports'
   spec.homepage      = "TODO: Put your gem's website or public repo URL here."
   spec.license       = "MIT"
 
