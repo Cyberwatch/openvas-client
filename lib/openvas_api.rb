@@ -10,12 +10,13 @@ module OpenVASApi
       @port = port
       @user = user
       @password = password
-      @buffsize = 16384
+      @buffsize = 16384 # TODO: Set the optimal value
 
       connect()
       authenticate()
     end
 
+    # Connect with an SSL socket
     def connect
       @plain_socket = TCPSocket.open(@host, @port)
       @socket = OpenSSL::SSL::SSLSocket.new(@plain_socket, OpenSSL::SSL::SSLContext.new())
@@ -25,6 +26,7 @@ module OpenVASApi
       @socket.connect
     end
 
+    # Get current version of OMP
     def version
       version = Nokogiri::XML(sendrecv('<get_version/>')).xpath('//version').text
       'Version : ' + version
@@ -41,9 +43,9 @@ module OpenVASApi
       end
       result = Nokogiri::XML(sendrecv(content.to_xml))
       if result.xpath('//authenticate_response/@status').text.eql?('200')
-        p 'Authentication OK'
+        'Authentication OK'
       else
-        p 'Authentication KO'
+        'Authentication KO'
       end
     end
 
@@ -54,17 +56,17 @@ module OpenVASApi
       end
     end
 
-    def configs
+    # Enable to choose between different types of scan
+    def configs(conf_name)
       users = Nokogiri::XML(sendrecv('<get_configs/>'))
       users.css('config').each do |config|
-        # Get Full and fast config by default
-        return config[:id] if config.xpath('./name').text.eql?('Full and fast')
+        return config[:id] if config.xpath('./name').text.eql?(conf_name)
       end
     end
 
+    # Get default OpenVas scanner
     def scanners
       users = Nokogiri::XML(sendrecv('<get_scanners/>'))
-      # Get default Scanner
       users.css('scanner')[0][:id]
     end
 
@@ -76,7 +78,12 @@ module OpenVASApi
         }
       end
       result = Nokogiri::XML(sendrecv(content.to_xml))
-      result.at_css('create_target_response')[:id]
+      if result.at_css('create_target_response')[:value].eql?(200)
+        result.at_css('create_target_response')[:id]
+      else
+        result.at_css('create_target_response')[:status_text]
+      end
+    end
 
     def delete_target(target_id)
       target = Nokogiri::XML::Builder.new do |xml|
@@ -110,13 +117,14 @@ module OpenVASApi
       Hash.from_xml(Nokogiri::XML(sendrecv(task.to_xml)).to_xml).to_json
     end
 
-    def create_task(task_name, target_name, host, comment = '')
+    # Return task's id
+    def create_task(task_name, target_id, comment = '')
       content = Nokogiri::XML::Builder.new do |xml|
         xml.create_task {
           xml.name task_name
           xml.comment comment
-          xml.config(id: configs())
-          xml.target(id: create_target(target_name, host))
+          xml.config(id: configs('Full and fast'))
+          xml.target(id: target_id)
           xml.scanner(id: scanners())
         }
       end
@@ -161,14 +169,19 @@ module OpenVASApi
       result.at_css('report')[:id]
     end
 
-    def start_task(id)
+    def resume_task(task_id)
       content = Nokogiri::XML::Builder.new do |xml|
-        xml.start_task(task_id: id)
+        xml.resume_task(task_id: task_id)
       end
       result = Nokogiri::XML(sendrecv(content.to_xml))
-      result.at_css('start_task_response report_id').text
+      if result.xpath('//resume_task_response/@status').text.eql?('202')
+        'Pause OK'
+      else
+        'Pause KO'
+      end
     end
 
+    # Return report in JSON format
     def report(report_id)
       content = Nokogiri::XML::Builder.new do |xml|
         xml.get_reports(report_id: report_id)
@@ -176,6 +189,7 @@ module OpenVASApi
       Hash.from_xml(Nokogiri::XML(sendrecv(content.to_xml)).to_xml).to_json
     end
 
+    # Return results in JSON format
     def results(task_id)
       content = Nokogiri::XML::Builder.new do |xml|
         xml.get_results(task_id: task_id)
