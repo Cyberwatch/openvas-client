@@ -77,6 +77,37 @@ module OpenVASApi
       end
       result = Nokogiri::XML(sendrecv(content.to_xml))
       result.at_css('create_target_response')[:id]
+
+    def delete_target(target_id)
+      target = Nokogiri::XML::Builder.new do |xml|
+        xml.delete_target(target_id: target_id)
+      end
+      result = Nokogiri::XML(sendrecv(target.to_xml))
+      result.at_xpath('//delete_target_response/@status').text.eql?('200')
+    end
+
+    def targets
+      targets = Nokogiri::XML(sendrecv('<get_targets/>'))
+      Hash.from_xml(Nokogiri::XML(targets.to_xml).to_xml).to_json
+    end
+
+    def target(id)
+      task = Nokogiri::XML::Builder.new do |xml|
+        xml.get_targets(target_id: id)
+      end
+      Hash.from_xml(Nokogiri::XML(sendrecv(task.to_xml)).to_xml).to_json
+    end
+
+    def tasks
+      tasks = Nokogiri::XML(sendrecv('<get_tasks/>'))
+      Hash.from_xml(Nokogiri::XML(tasks.to_xml).to_xml).to_json
+    end
+
+    def task(id)
+      task = Nokogiri::XML::Builder.new do |xml|
+        xml.get_tasks(task_id: id)
+      end
+      Hash.from_xml(Nokogiri::XML(sendrecv(task.to_xml)).to_xml).to_json
     end
 
     def create_task(task_name, target_name, host, comment = '')
@@ -91,6 +122,34 @@ module OpenVASApi
       end
       result = Nokogiri::XML(sendrecv(content.to_xml))
       result.at_css('create_task_response')[:id]
+    end
+
+    def delete_task(task_id)
+      task = Nokogiri::XML::Builder.new do |xml|
+        xml.delete_task(task_id: task_id)
+      end
+      result = Nokogiri::XML(sendrecv(task.to_xml))
+      result.at_xpath('//delete_task_response/@status').text.eql?('200')
+    end
+
+    def start_task(task_id)
+      content = Nokogiri::XML::Builder.new do |xml|
+        xml.start_task(task_id: task_id)
+      end
+      result = Nokogiri::XML(sendrecv(content.to_xml))
+      result.at_css('start_task_response report_id').text
+    end
+
+    def stop_task(task_id)
+      content = Nokogiri::XML::Builder.new do |xml|
+        xml.stop_task(task_id: task_id)
+      end
+      result = Nokogiri::XML(sendrecv(content.to_xml))
+      if result.at_xpath('//stop_task_response/@status').text.eql?('202')
+        'Arrêt OK'
+      else
+        'Arrêt KO'
+      end
     end
 
     # Get report ID for a specific task
