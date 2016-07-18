@@ -2,6 +2,7 @@ module OpenVASClient
   class User
     attr_reader :id
 
+    # Name can't contain spaces
     def initialize(name, password, agent)
       @agent = agent
       @name = name

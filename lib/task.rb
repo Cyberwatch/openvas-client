@@ -18,6 +18,7 @@ module OpenVASClient
       @id = result.at_css('create_task_response')[:id]
     end
 
+    # Destroy the same object multiple times won't raise an error
     def destroy
       task = Nokogiri::XML::Builder.new do |xml|
         xml.delete_task(task_id: self.id)
@@ -31,7 +32,7 @@ module OpenVASClient
         xml.start_task(task_id: self.id)
       end
       result = Nokogiri::XML(@agent.sendrecv(content.to_xml))
-      result.at_css('start_task_response report_id').text
+      result.at_xpath('//start_task_response/@status').text.eql?('202')
     end
 
     def stop
@@ -55,7 +56,7 @@ module OpenVASClient
       content = Nokogiri::XML::Builder.new do |xml|
         xml.get_results(task_id: self.id)
       end
-      Hash.from_xml(Nokogiri::XML(@agent.sendrecv(content.to_xml)).to_xml).to_json
+      Hash.from_xml(@agent.sendrecv(content.to_xml)).deep_symbolize_keys
     end
 
     # Return report for a specific task
@@ -69,19 +70,19 @@ module OpenVASClient
       content = Nokogiri::XML::Builder.new do |xml|
         xml.get_reports(report_id: report_id)
       end
-      Hash.from_xml(Nokogiri::XML(@agent.sendrecv(content.to_xml)).to_xml).to_json
+      Hash.from_xml(@agent.sendrecv(content.to_xml)).deep_symbolize_keys
     end
 
     def all
       tasks = Nokogiri::XML(@agent.sendrecv('<get_tasks/>'))
-      Hash.from_xml(Nokogiri::XML(tasks.to_xml).to_xml).to_json
+      Hash.from_xml(tasks.to_xml).deep_symbolize_keys
     end
 
     def refresh
       task = Nokogiri::XML::Builder.new do |xml|
         xml.get_tasks(task_id: self.id)
       end
-      Hash.from_xml(Nokogiri::XML(@agent.sendrecv(task.to_xml)).to_xml).to_json
+      Hash.from_xml(@agent.sendrecv(task.to_xml)).deep_symbolize_keys
     end
   end
 end
