@@ -6,5 +6,5 @@ RSpec::Core::RakeTask.new(:spec)
 task :default => :spec
 
 task :console do
-  exec "irb -r openvas_api -I ./lib"
+  exec "irb -r openvas_client -I ./lib"
 end

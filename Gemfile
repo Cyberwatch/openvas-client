@@ -1,6 +1,6 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in openvas_api.gemspec
+# Specify your gem's dependencies in openvas_client.gemspec
 gemspec
 
 # permet de gerer la communication XML

@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'openvas_api/version'
+require 'openvas_client/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "openvas_api"
-  spec.version       = OpenvasApi::VERSION
+  spec.name          = "openvas_client"
+  spec.version       = OpenvasClient::VERSION
   spec.authors       = ["Vincent Charretier"]
   spec.email         = ["vincent@cyberwatch.fr"]
 

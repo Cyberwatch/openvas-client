@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-describe OpenvasApi do
+describe OpenvasClient do
   it 'has a version number' do
-    expect(OpenvasApi::VERSION).not_to be nil
+    expect(OpenvasClient::VERSION).not_to be nil
   end
 
   it 'does something useful' do
