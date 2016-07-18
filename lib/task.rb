@@ -48,7 +48,9 @@ module OpenVASClient
         xml.resume_task(task_id: self.id)
       end
       result = Nokogiri::XML(@agent.sendrecv(content.to_xml))
-      result.xpath('//resume_task_response/@status').text.eql?('202')
+      unless result.at_css('resume_task_response')[:status].eql?('202')
+        raise OpenVASError.new(result.at_css('resume_task_response')[:status]), result.at_css('resume_task_response')[:status_text]
+      end
     end
 
     # Return results in JSON format
