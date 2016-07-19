@@ -7,6 +7,8 @@ gemspec
 gem 'nokogiri'
 # Permet de parser du XML -> JSON
 gem 'activesupport'
+# Check coding style
+gem 'rubocop'
 
 group :development, :test do
   gem 'rspec-rails'

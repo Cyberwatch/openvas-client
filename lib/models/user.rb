@@ -1,4 +1,5 @@
 module OpenVASClient
+  # define an OpenVAS User
   class User
     NB_MAX_TASKS = 3
     attr_reader :id, :name, :targets, :tasks
@@ -8,10 +9,11 @@ module OpenVASClient
       @agent = agent
       @name = name
       @password = password
-      unless self.class.exist(name, agent)
-        create
-      else
+      @logger = Logger.new(STDOUT)
+      if self.class.exist(name, agent)
         import
+      else
+        create
       end
       @targets = OpenVASClient::Target.import_targets(self, @agent)
       @tasks = OpenVASClient::Task.import_tasks(self, @agent)
@@ -19,10 +21,10 @@ module OpenVASClient
 
     def create
       user_xml = Nokogiri::XML::Builder.new do |xml|
-        xml.create_user{
+        xml.create_user do
           xml.name @name
           xml.password @password
-        }
+        end
       end
       result = Nokogiri::XML(@agent.sendrecv(user_xml.to_xml))
       unless result.at_css('create_user_response')[:status].eql?('201')
@@ -41,18 +43,18 @@ module OpenVASClient
 
     def create_task(name, target)
       task = OpenVASClient::Task.new(name, target, @agent)
-      self.tasks << task
+      tasks << task
       task
     end
 
     def create_target(name, hosts)
       target = OpenVASClient::Target.new(name, hosts, @agent)
-      self.targets << target
+      targets << target
       target
     end
 
     def find_target_by_name(name)
-      self.targets.each do |target|
+      targets.each do |target|
         return target if target.name.eql?(name)
       end
     end
@@ -68,14 +70,12 @@ module OpenVASClient
     def self.users(agent)
       users = Nokogiri::XML(agent.sendrecv('<get_users/>'))
       users.css('user name').each do |name|
-        p 'User : ' + name.text
+        logger.info 'User : ' + name.text
       end
     end
 
     def clean_tasks
-      if @tasks.length > NB_MAX_TASKS
-        @tasks = @tasks.sort_by(&:creation_time)
-      end
+      @tasks = @tasks.sort_by(&:creation_time) if @tasks.length > NB_MAX_TASKS
       while @tasks.length > NB_MAX_TASKS
         @tasks.first.destroy
         @tasks.shift

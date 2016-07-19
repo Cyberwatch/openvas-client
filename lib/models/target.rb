@@ -1,6 +1,7 @@
 require 'openvas_error'
 
 module OpenVASClient
+  # Define a target to scan by using its host name
   class Target
     attr_accessor :id, :name
 
@@ -8,19 +9,19 @@ module OpenVASClient
       @name = name
       @hosts = hosts
       @agent = agent
-      unless self.class.exist(name, agent)
-        create
-      else
+      if self.class.exist(name, agent)
         import
+      else
+        create
       end
     end
 
     def create
       content = Nokogiri::XML::Builder.new do |xml|
-        xml.create_target {
+        xml.create_target do
           xml.name @name
           xml.hosts @hosts
-        }
+        end
       end
       result = Nokogiri::XML(@agent.sendrecv(content.to_xml))
       unless result.at_css('create_target_response')[:status].eql?('201')
@@ -31,7 +32,7 @@ module OpenVASClient
 
     def destroy
       target = Nokogiri::XML::Builder.new do |xml|
-        xml.delete_target(target_id: self.id)
+        xml.delete_target(target_id: id)
       end
       result = Nokogiri::XML(@agent.sendrecv(target.to_xml))
       result.at_xpath('//delete_target_response/@status').text.eql?('200')
@@ -39,7 +40,7 @@ module OpenVASClient
 
     def refresh
       task = Nokogiri::XML::Builder.new do |xml|
-        xml.get_targets(target_id: self.id)
+        xml.get_targets(target_id: id)
       end
       Hash.from_xml(@agent.sendrecv(task.to_xml)).deep_symbolize_keys
     end
@@ -67,7 +68,7 @@ module OpenVASClient
       results = []
       targets = Hash.from_xml(agent.sendrecv(request.to_xml)).deep_symbolize_keys
       # If there is just one target, it's not an Array
-      if targets[:get_targets_response][:target].kind_of?(Array)
+      if targets[:get_targets_response][:target].is_a?(Array)
         targets[:get_targets_response][:target].each do |target|
           results << Target.new(target[:name], target[:hosts], agent)
         end

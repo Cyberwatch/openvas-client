@@ -3,9 +3,9 @@ require 'nokogiri'
 require 'active_support/all'
 
 module OpenVASClient
+  # Main class which initiate connexion with OpenVAS API
   class OpenVASAgent
-
-    BLOCK_SIZE = 1024*16
+    BLOCK_SIZE = 1024 * 16
 
     attr_accessor :user
 
@@ -13,15 +13,29 @@ module OpenVASClient
       @host = host
       @port = port
 
-      connect()
+      connect
       authenticate(user, password)
       @user = OpenVASClient::User.new(user, password, self)
+    end
+
+    # set maximum for tasks, targets and users
+    def max_results(value)
+      content = Nokogiri::XML::Builder.new do |xml|
+        xml.modify_setting(setting_id: '5f5a8712-8017-11e1-8556-406186ea4fc5') do
+          xml.name 'Rows Per Page'
+          xml.value value
+        end
+      end
+      result = Nokogiri::XML(sendrecv(content.to_xml))
+      unless result.at_css('modify_setting_response')[:status].eql?('200')
+        raise OpenVASError.new(result.at_css('modify_setting_response')[:status]), result.at_css('modify_setting_response')[:status_text]
+      end
     end
 
     # Connect with an SSL socket
     def connect
       @plain_socket = TCPSocket.open(@host, @port)
-      @socket = OpenSSL::SSL::SSLSocket.new(@plain_socket, OpenSSL::SSL::SSLContext.new())
+      @socket = OpenSSL::SSL::SSLSocket.new(@plain_socket, OpenSSL::SSL::SSLContext.new)
 
       # Enable to close socket and SSL layer together
       @socket.sync_close = true
@@ -36,12 +50,12 @@ module OpenVASClient
 
     def authenticate(user, password)
       content = Nokogiri::XML::Builder.new do |xml|
-        xml.authenticate {
-          xml.credentials {
+        xml.authenticate do
+          xml.credentials do
             xml.username user
             xml.password password
-          }
-        }
+          end
+        end
       end
       result = Nokogiri::XML(sendrecv(content.to_xml))
 
@@ -64,7 +78,7 @@ module OpenVASClient
       users.css('scanner')[0][:id]
     end
 
-    def sendrecv (tosend)
+    def sendrecv(tosend)
       @socket.syswrite(tosend)
       @socket.sysread(BLOCK_SIZE)
     end

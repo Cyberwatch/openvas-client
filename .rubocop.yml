@@ -1,0 +1,52 @@
+Rails:
+  Enabled: true
+
+AllCops:
+  Include:
+    - 'lib/**/*.rb'
+  Exclude:
+    - 'bin/**/*'
+
+Metrics/LineLength:
+  Max: 150
+
+Metrics/AbcSize:
+  Max: 100
+
+Metrics/MethodLength:
+  Max: 70
+
+Metrics/PerceivedComplexity:
+  Max: 20
+
+Metrics/ClassLength:
+  Max: 350
+
+Metrics/CyclomaticComplexity:
+  Max: 18
+
+Style/AsciiComments:
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Enabled: false
+  EnforcedStyle: compact
+
+Style/ClassVars:
+  Enabled: false
+
+Style/RegexpLiteral:
+  EnforcedStyle: slashes
+  AllowInnerSlashes: true
+
+Rails/HasAndBelongsToMany:
+  Enabled: false
+
+Rails/TimeZone:
+  Enabled: false
+
+Rails/Date:
+  Enabled: false
+
+Rails/Validation:
+  Severity: warning

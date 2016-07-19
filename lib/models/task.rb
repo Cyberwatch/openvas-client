@@ -1,4 +1,5 @@
 module OpenVASClient
+  # Define a Task which will perform scans according to a specific target
   class Task
     attr_accessor :id, :creation_time
 
@@ -6,21 +7,21 @@ module OpenVASClient
       @agent = agent
       @name = name
       @target = target
-      unless self.class.exist(name, agent)
-        create
-      else
+      if self.class.exist(name, agent)
         import
+      else
+        create
       end
     end
 
     def create
       content = Nokogiri::XML::Builder.new do |xml|
-        xml.create_task {
+        xml.create_task do
           xml.name @name
           xml.config(id: @agent.configs('Full and fast'))
           xml.target(id: @target.id)
           xml.scanner(id: @agent.scanners)
-        }
+        end
       end
       result = Nokogiri::XML(@agent.sendrecv(content.to_xml))
       @id = result.at_css('create_task_response')[:id]
@@ -39,7 +40,7 @@ module OpenVASClient
     # Destroy the same object multiple times won't raise an error
     def destroy
       task = Nokogiri::XML::Builder.new do |xml|
-        xml.delete_task(task_id: self.id)
+        xml.delete_task(task_id: id)
       end
       result = Nokogiri::XML(@agent.sendrecv(task.to_xml))
       result.at_xpath('//delete_task_response/@status').text.eql?('200')
@@ -47,7 +48,7 @@ module OpenVASClient
 
     def start
       content = Nokogiri::XML::Builder.new do |xml|
-        xml.start_task(task_id: self.id)
+        xml.start_task(task_id: id)
       end
       result = Nokogiri::XML(@agent.sendrecv(content.to_xml))
       result.at_xpath('//start_task_response/@status').text.eql?('202')
@@ -55,7 +56,7 @@ module OpenVASClient
 
     def stop
       content = Nokogiri::XML::Builder.new do |xml|
-        xml.stop_task(task_id: self.id)
+        xml.stop_task(task_id: id)
       end
       result = Nokogiri::XML(@agent.sendrecv(content.to_xml))
       result.at_xpath('//stop_task_response/@status').text.eql?('202')
@@ -63,7 +64,7 @@ module OpenVASClient
 
     def resume
       content = Nokogiri::XML::Builder.new do |xml|
-        xml.resume_task(task_id: self.id)
+        xml.resume_task(task_id: id)
       end
       result = Nokogiri::XML(@agent.sendrecv(content.to_xml))
       unless result.at_css('resume_task_response')[:status].eql?('202')
@@ -74,7 +75,7 @@ module OpenVASClient
     # Return results in JSON format
     def results
       content = Nokogiri::XML::Builder.new do |xml|
-        xml.get_results(task_id: self.id)
+        xml.get_results(task_id: id)
       end
       Hash.from_xml(@agent.sendrecv(content.to_xml)).deep_symbolize_keys
     end
@@ -82,7 +83,7 @@ module OpenVASClient
     # Return report for a specific task
     def report
       content = Nokogiri::XML::Builder.new do |xml|
-        xml.get_tasks(task_id: self.id, details: '1')
+        xml.get_tasks(task_id: id, details: '1')
       end
       result = Nokogiri::XML(@agent.sendrecv(content.to_xml))
       report_id = result.at_css('report')[:id]
@@ -95,7 +96,7 @@ module OpenVASClient
 
     def status
       task = Nokogiri::XML::Builder.new do |xml|
-        xml.get_tasks(task_id: self.id)
+        xml.get_tasks(task_id: id)
       end
       Hash.from_xml(@agent.sendrecv(task.to_xml)).deep_symbolize_keys
     end
@@ -115,12 +116,13 @@ module OpenVASClient
       results = []
       tasks = Hash.from_xml(agent.sendrecv(request.to_xml)).deep_symbolize_keys
       # If there is just one task, it's not an Array
-      if tasks[:get_tasks_response][:task].kind_of?(Array)
+      if tasks[:get_tasks_response][:task].is_a?(Array)
         tasks[:get_tasks_response][:task].each do |task|
           results << Task.new(task[:name], user.find_target_by_name(task[:target][:name]), agent)
         end
       else
-        results << Task.new(tasks[:get_tasks_response][:task][:name], user.find_target_by_name(tasks[:get_tasks_response][:task][:target][:name]), agent)
+        task = tasks[:get_tasks_response][:task]
+        results << Task.new(task[:name], user.find_target_by_name(task[:target][:name]), agent)
       end
       results
     end
