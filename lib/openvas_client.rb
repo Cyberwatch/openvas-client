@@ -1,9 +1,6 @@
 require 'openvas_client/version'
 require 'nokogiri'
 require 'active_support/all'
-require 'target'
-require 'task'
-require 'user'
 
 module OpenVASClient
   class OpenVASAgent

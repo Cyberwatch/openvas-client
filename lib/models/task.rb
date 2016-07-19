@@ -4,18 +4,34 @@ module OpenVASClient
 
     def initialize(name, target, agent)
       @agent = agent
+      @name = name
+      @target = target
+      unless self.class.exist(name, agent)
+        create
+      else
+        import
+      end
+    end
+
+    def create
       content = Nokogiri::XML::Builder.new do |xml|
-        @name = name
-        @target = target
         xml.create_task {
           xml.name @name
           xml.config(id: @agent.configs('Full and fast'))
           xml.target(id: @target.id)
-          xml.scanner(id: @agent.scanners())
+          xml.scanner(id: @agent.scanners)
         }
       end
       result = Nokogiri::XML(@agent.sendrecv(content.to_xml))
       @id = result.at_css('create_task_response')[:id]
+    end
+
+    def import
+      task = Nokogiri::XML::Builder.new do |xml|
+        xml.get_tasks(filter: "name=#{@name}")
+      end
+      result = Hash.from_xml(@agent.sendrecv(task.to_xml)).deep_symbolize_keys
+      @id = result[:get_tasks_response][:task][:id]
     end
 
     # Destroy the same object multiple times won't raise an error
@@ -75,16 +91,37 @@ module OpenVASClient
       Hash.from_xml(@agent.sendrecv(content.to_xml)).deep_symbolize_keys
     end
 
-    def all
-      tasks = Nokogiri::XML(@agent.sendrecv('<get_tasks/>'))
-      Hash.from_xml(tasks.to_xml).deep_symbolize_keys
-    end
-
     def refresh
       task = Nokogiri::XML::Builder.new do |xml|
         xml.get_tasks(task_id: self.id)
       end
       Hash.from_xml(@agent.sendrecv(task.to_xml)).deep_symbolize_keys
+    end
+
+    def self.exist(name, agent)
+      task = Nokogiri::XML::Builder.new do |xml|
+        xml.get_tasks(filter: "name=#{name}")
+      end
+      result = Hash.from_xml(agent.sendrecv(task.to_xml)).deep_symbolize_keys
+      !result[:get_tasks_response][:task].nil?
+    end
+
+    def self.import_tasks(user, agent)
+      request = Nokogiri::XML::Builder.new do |xml|
+        xml.get_tasks(filter: "owner.name=#{user.name}")
+      end
+      results = []
+      tasks = Hash.from_xml(agent.sendrecv(request.to_xml)).deep_symbolize_keys
+      # If there is just one task, it's not an Array
+      if tasks[:get_tasks_response][:task].kind_of?(Array)
+        tasks[:get_tasks_response][:task].each do |target|
+          #results << Task.new(task[:name], , agent)
+        end
+      else
+        p tasks
+        #results << Task.new(tasks[:get_tasks_response][:task][:name], , agent)
+      end
+      results
     end
   end
 end

@@ -1,6 +1,8 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+# Add file in lib/models directory
+Dir[File.dirname(__FILE__) + '/lib/models/*.rb'].each {|file| require file }
 require 'openvas_client/version'
 
 Gem::Specification.new do |spec|
