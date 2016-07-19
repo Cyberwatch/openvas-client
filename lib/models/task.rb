@@ -91,7 +91,7 @@ module OpenVASClient
       Hash.from_xml(@agent.sendrecv(content.to_xml)).deep_symbolize_keys
     end
 
-    def refresh
+    def status
       task = Nokogiri::XML::Builder.new do |xml|
         xml.get_tasks(task_id: self.id)
       end
