@@ -7,14 +7,14 @@ RSpec.describe OpenVASClient::Task, type: :model do
 
   describe 'create Task' do
     it 'with valid arguments' do
-      target = OpenVASClient::Target.new(Faker::Company.name, 'localhost', @agent)
+      target = OpenVASClient::Target.new(Faker::Lorem.word, 'localhost', @agent)
       expect(OpenVASClient::Task.new(Faker::Lorem.word, target, @agent).id).not_to eq(nil)
     end
   end
 
   describe 'destroy Task' do
     it 'with valid arguments' do
-      target = OpenVASClient::Target.new(Faker::Company.name, 'localhost', @agent)
+      target = OpenVASClient::Target.new(Faker::Lorem.word, 'localhost', @agent)
       task = OpenVASClient::Task.new(Faker::Lorem.word, target, @agent)
       expect(task.destroy).to eq(true)
     end
@@ -22,7 +22,7 @@ RSpec.describe OpenVASClient::Task, type: :model do
 
   describe 'running Task' do
     it 'with valid arguments' do
-      target = OpenVASClient::Target.new(Faker::Company.name, 'localhost', @agent)
+      target = OpenVASClient::Target.new(Faker::Lorem.word, 'localhost', @agent)
       task = OpenVASClient::Task.new(Faker::Lorem.word, target, @agent)
       expect(task.start).to eq(true)
       expect(task.stop).to eq(true)
@@ -32,12 +32,11 @@ RSpec.describe OpenVASClient::Task, type: :model do
     end
 
     it 'with invalid arguments -> resume too fast' do
-      target = OpenVASClient::Target.new(Faker::Company.name, 'localhost', @agent)
+      target = OpenVASClient::Target.new(Faker::Lorem.word, 'localhost', @agent)
       task = OpenVASClient::Task.new(Faker::Lorem.word, target, @agent)
       expect(task.start).to eq(true)
       expect(task.stop).to eq(true)
       expect{ task.resume }.to raise_error(OpenVASClient::OpenVASError, 'Task must be in Stopped state')
-
     end
   end
 end
