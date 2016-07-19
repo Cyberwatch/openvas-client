@@ -13,11 +13,5 @@ RSpec.describe OpenVASClient::User, type: :model do
     it 'with invalid arguments -> spaces in name' do
       expect{ OpenVASClient::User.new(Faker::Name.name, Faker::Internet.password, @agent) }.to raise_error(OpenVASClient::OpenVASError, 'Invalid characters in user name')
     end
-
-    it 'with invalid arguments -> name already exists' do
-      name = Faker::Name.first_name
-      OpenVASClient::User.new(name, Faker::Internet.password, @agent)
-      expect{ OpenVASClient::User.new(name, Faker::Internet.password, @agent) }.to raise_error(OpenVASClient::OpenVASError, 'User already exists')
-    end
   end
 end
