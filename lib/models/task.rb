@@ -114,12 +114,11 @@ module OpenVASClient
       tasks = Hash.from_xml(agent.sendrecv(request.to_xml)).deep_symbolize_keys
       # If there is just one task, it's not an Array
       if tasks[:get_tasks_response][:task].kind_of?(Array)
-        tasks[:get_tasks_response][:task].each do |target|
-          #results << Task.new(task[:name], , agent)
+        tasks[:get_tasks_response][:task].each do |task|
+          results << Task.new(task[:name], user.find_target_by_name(task[:target][:name]), agent)
         end
       else
-        p tasks
-        #results << Task.new(tasks[:get_tasks_response][:task][:name], , agent)
+        results << Task.new(tasks[:get_tasks_response][:task][:name], user.find_target_by_name(tasks[:get_tasks_response][:task][:target][:name]), agent)
       end
       results
     end
