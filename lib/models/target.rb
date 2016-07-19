@@ -1,5 +1,4 @@
 require 'openvas_error'
-require 'shellwords'
 
 module OpenVASClient
   class Target
@@ -47,7 +46,7 @@ module OpenVASClient
 
     def import
       target = Nokogiri::XML::Builder.new do |xml|
-        xml.get_targets(filter: "name=#{@name.shellescape}")
+        xml.get_targets(filter: "name=#{@name}")
       end
       result = Hash.from_xml(@agent.sendrecv(target.to_xml)).deep_symbolize_keys
       @id = result[:get_targets_response][:target][:id]
@@ -55,7 +54,7 @@ module OpenVASClient
 
     def self.exist(name, agent)
       target = Nokogiri::XML::Builder.new do |xml|
-        xml.get_targets(filter: "name=#{name.shellescape}")
+        xml.get_targets(filter: "name=#{name}")
       end
       result = Hash.from_xml(agent.sendrecv(target.to_xml)).deep_symbolize_keys
       !result[:get_targets_response][:target].nil?
