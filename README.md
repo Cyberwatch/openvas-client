@@ -22,7 +22,37 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Init agent with default values => `host: localhost, port: 9390, user: admin, password: openvas`
+
+    openvas = OpenVASClient::OpenVASAgent.new()
+
+You can create a target (**target's name can't contain spaces**)
+
+    target = openvas.user.create_target('target_name', host)
+
+or find it with its name
+
+    target = openvas.user.find_target_by_name('target_name')
+
+You can also create a task
+
+    task = openvas.user.create_task('task_name', target)
+
+Now you can start, stop and resume this task
+
+    task.start
+    task.stop
+    task.resume
+
+Finally, results and report can be imported in JSON format
+
+    task.results
+    task.report
+
+User's tasks and targets (both an array) are accessible with these commands
+
+    openvas.user.targets
+    openvas.user.tasks
 
 ## Development
 
