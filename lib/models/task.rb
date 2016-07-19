@@ -1,6 +1,6 @@
 module OpenVASClient
   class Task
-    attr_accessor :id
+    attr_accessor :id, :creation_time
 
     def initialize(name, target, agent)
       @agent = agent
@@ -24,6 +24,7 @@ module OpenVASClient
       end
       result = Nokogiri::XML(@agent.sendrecv(content.to_xml))
       @id = result.at_css('create_task_response')[:id]
+      @creation_time = result.at_css('create_task_response')[:creation_time]
     end
 
     def import
@@ -32,6 +33,7 @@ module OpenVASClient
       end
       result = Hash.from_xml(@agent.sendrecv(task.to_xml)).deep_symbolize_keys
       @id = result[:get_tasks_response][:task][:id]
+      @creation_time = result[:get_tasks_response][:task][:creation_time]
     end
 
     # Destroy the same object multiple times won't raise an error

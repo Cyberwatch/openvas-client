@@ -1,5 +1,6 @@
 module OpenVASClient
   class User
+    NB_MAX_TASKS = 3
     attr_reader :id, :name, :targets, :tasks
 
     # Name can't contain spaces
@@ -68,6 +69,16 @@ module OpenVASClient
       users = Nokogiri::XML(agent.sendrecv('<get_users/>'))
       users.css('user name').each do |name|
         p 'User : ' + name.text
+      end
+    end
+
+    def clean_tasks
+      if @tasks.length > NB_MAX_TASKS
+        @tasks = @tasks.sort_by(&:creation_time)
+      end
+      while @tasks.length > NB_MAX_TASKS
+        @tasks.first.destroy
+        @tasks.shift
       end
     end
   end
