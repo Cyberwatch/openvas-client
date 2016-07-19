@@ -7,14 +7,15 @@ module OpenVASClient
 
     BLOCK_SIZE = 1024*16
 
+    attr_accessor :user
+
     def initialize(host = 'localhost', port = 9390, user = 'admin', password = 'openvas')
       @host = host
       @port = port
-      @user = user
-      @password = password
 
       connect()
-      authenticate()
+      authenticate(user, password)
+      @user = OpenVASClient::User.new(user, password, self)
     end
 
     # Connect with an SSL socket
@@ -33,12 +34,12 @@ module OpenVASClient
       'Version : ' + version
     end
 
-    def authenticate
+    def authenticate(user, password)
       content = Nokogiri::XML::Builder.new do |xml|
         xml.authenticate {
           xml.credentials {
-            xml.username @user
-            xml.password @password
+            xml.username user
+            xml.password password
           }
         }
       end
@@ -46,13 +47,6 @@ module OpenVASClient
 
       unless result.at_css('authenticate_response')[:status].eql?('200')
         raise OpenVASError.new(result.at_css('authenticate_response')[:status]), result.at_css('authenticate_response')[:status_text]
-      end
-    end
-
-    def users
-      users = Nokogiri::XML(sendrecv('<get_users/>'))
-      users.css('user name').each do |name|
-        p 'User : ' + name.text
       end
     end
 
