@@ -3,7 +3,7 @@ require 'openvas_error'
 module OpenVASClient
   # Define a target to scan by using its host name
   class Target
-    attr_accessor :id, :name
+    attr_accessor :id, :name, :hosts
 
     def initialize(name, hosts, agent)
       @name = name
@@ -52,6 +52,37 @@ module OpenVASClient
       result = Hash.from_xml(@agent.sendrecv(target.to_xml)).deep_symbolize_keys
       @id = result[:get_targets_response][:target][:id]
     end
+
+    ### Setters ###
+
+    def name=(value)
+      target = Nokogiri::XML::Builder.new do |xml|
+        xml.modify_target(target_id: id) do
+          xml.name value
+        end
+      end
+      result = Nokogiri::XML(@agent.sendrecv(target.to_xml))
+      unless result.at_xpath('//modify_target_response/@status').text.eql?('200')
+        raise OpenVASError.new(result.at_css('modify_target_response')[:status]), result.at_css('modify_target_response')[:status_text]
+      end
+      @name = value
+    end
+
+    def hosts=(value)
+      target = Nokogiri::XML::Builder.new do |xml|
+        xml.modify_target(target_id: id) do
+          xml.hosts value
+          xml.exclude_hosts @hosts # To change an host, you have to exclude it first
+        end
+      end
+      result = Nokogiri::XML(@agent.sendrecv(target.to_xml))
+      unless result.at_xpath('//modify_target_response/@status').text.eql?('200')
+        raise OpenVASError.new(result.at_css('modify_target_response')[:status]), result.at_css('modify_target_response')[:status_text]
+      end
+      @hosts = value
+    end
+
+    ### Static Methods ###
 
     def self.exist(name, agent)
       target = Nokogiri::XML::Builder.new do |xml|

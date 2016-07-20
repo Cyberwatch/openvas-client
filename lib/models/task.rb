@@ -100,6 +100,24 @@ module OpenVASClient
       Hash.from_xml(@agent.sendrecv(task.to_xml)).deep_symbolize_keys
     end
 
+    ### Setters ###
+    # @hosts can't be set
+
+    def name=(value)
+      task = Nokogiri::XML::Builder.new do |xml|
+        xml.modify_task(task_id: id) do
+          xml.name value
+        end
+      end
+      result = Nokogiri::XML(@agent.sendrecv(task.to_xml))
+      unless result.at_xpath('//modify_task_response/@status').text.eql?('200')
+        raise OpenVASError.new(result.at_css('modify_task_response')[:status]), result.at_css('modify_task_response')[:status_text]
+      end
+      @name = value
+    end
+
+    ### Static Methods ###
+
     def self.exist(name, agent)
       task = Nokogiri::XML::Builder.new do |xml|
         xml.get_tasks(filter: "name=#{name}")

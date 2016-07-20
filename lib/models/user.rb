@@ -2,7 +2,7 @@ module OpenVASClient
   # define an OpenVAS User
   class User
     NB_MAX_TASKS = 3
-    attr_reader :id, :name, :targets, :tasks
+    attr_reader :id, :name, :targets, :tasks, :password
 
     # Name can't contain spaces
     def initialize(name, password, agent)
@@ -64,6 +64,56 @@ module OpenVASClient
       end
     end
 
+    def clean_tasks
+      @tasks = @tasks.sort_by(&:creation_time) if @tasks.length > NB_MAX_TASKS
+      while @tasks.length > NB_MAX_TASKS
+        @tasks.first.destroy
+        @tasks.shift
+      end
+    end
+
+    def destroy_task(name)
+      task = find_task_by_name(name)
+      task.destroy
+      tasks.delete(task)
+    end
+
+    def destroy_target(name)
+      target = find_target_by_name(name)
+      target.destroy
+      targets.delete(target)
+    end
+
+    ### Setters ###
+
+    def name=(value)
+      user = Nokogiri::XML::Builder.new do |xml|
+        xml.modify_user(user_id: id) do
+          xml.new_name value
+        end
+      end
+      result = Nokogiri::XML(@agent.sendrecv(user.to_xml))
+      unless result.at_xpath('//modify_user_response/@status').text.eql?('200')
+        raise OpenVASError.new(result.at_css('modify_user_response')[:status]), result.at_css('modify_user_response')[:status_text]
+      end
+      @name = value
+    end
+
+    def password=(value)
+      user = Nokogiri::XML::Builder.new do |xml|
+        xml.modify_user(user_id: id) do
+          xml.password value
+        end
+      end
+      result = Nokogiri::XML(@agent.sendrecv(user.to_xml))
+      unless result.at_xpath('//modify_user_response/@status').text.eql?('200')
+        raise OpenVASError.new(result.at_css('modify_user_response')[:status]), result.at_css('modify_user_response')[:status_text]
+      end
+      @password = value
+    end
+
+    ### Static Methods ###
+
     def self.exist(name, agent)
       user = Nokogiri::XML::Builder.new do |xml|
         xml.get_users(filter: "name=#{name}")
@@ -87,26 +137,6 @@ module OpenVASClient
       end
       result = Nokogiri::XML(agent.sendrecv(user.to_xml))
       result.at_xpath('//delete_user_response/@status').text.eql?('200')
-    end
-
-    def clean_tasks
-      @tasks = @tasks.sort_by(&:creation_time) if @tasks.length > NB_MAX_TASKS
-      while @tasks.length > NB_MAX_TASKS
-        @tasks.first.destroy
-        @tasks.shift
-      end
-    end
-
-    def destroy_task(name)
-      task = find_task_by_name(name)
-      task.destroy
-      tasks.delete(task)
-    end
-
-    def destroy_target(name)
-      target = find_target_by_name(name)
-      target.destroy
-      targets.delete(target)
     end
   end
 end
