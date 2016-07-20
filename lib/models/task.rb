@@ -1,7 +1,7 @@
 module OpenVASClient
   # Define a Task which will perform scans according to a specific target
   class Task
-    attr_accessor :id, :creation_time
+    attr_accessor :id, :creation_time, :name
 
     def initialize(name, target, agent)
       @agent = agent
@@ -83,11 +83,10 @@ module OpenVASClient
     # Return report for a specific task
     def report
       content = Nokogiri::XML::Builder.new do |xml|
-        xml.get_tasks(task_id: id, details: '1')
+        xml.get_tasks(task_id: id)
       end
       result = Nokogiri::XML(@agent.sendrecv(content.to_xml))
       report_id = result.at_css('report')[:id]
-
       content = Nokogiri::XML::Builder.new do |xml|
         xml.get_reports(report_id: report_id)
       end

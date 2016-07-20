@@ -80,7 +80,14 @@ module OpenVASClient
 
     def sendrecv(tosend)
       @socket.syswrite(tosend)
-      @socket.sysread(BLOCK_SIZE)
+
+      buffer = ''
+      loop do
+        last_part = @socket.sysread(BLOCK_SIZE)
+        buffer += last_part
+        break if last_part.size < BLOCK_SIZE
+      end
+      buffer
     end
   end
 end
