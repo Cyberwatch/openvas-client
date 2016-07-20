@@ -96,5 +96,17 @@ module OpenVASClient
         @tasks.shift
       end
     end
+
+    def destroy_task(name)
+      task = find_task_by_name(name)
+      task.destroy
+      tasks.delete(task)
+    end
+
+    def destroy_target(name)
+      target = find_target_by_name(name)
+      target.destroy
+      targets.delete(target)
+    end
   end
 end
