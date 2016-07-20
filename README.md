@@ -1,4 +1,4 @@
-# OpenvasClient
+# OpenVASClient
 
 Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/openvas_api`. To experiment with that code, run `bin/console` for an interactive prompt.
 
@@ -22,21 +22,31 @@ Or install it yourself as:
 
 ## Usage
 
+### Initialisation
+
 Init agent with default values => `host: localhost, port: 9390, user: admin, password: openvas`
 
-    openvas = OpenVASClient::OpenVASAgent.new()
+    agent = OpenVASClient::OpenVASAgent.new()
+
+### Target
 
 You can create a target (**target's name can't contain spaces**)
 
-    target = openvas.user.create_target('target_name', host)
+    target = agent.user.create_target('target_name', host)
 
 or find it with its name
 
-    target = openvas.user.find_target_by_name('target_name')
+    target = agent.user.find_target_by_name('target_name')
+
+### Task
 
 You can also create a task
 
-    task = openvas.user.create_task('task_name', target)
+    task = agent.user.create_task('task_name', target)
+
+or find it with its name
+
+    task = agent.user.find_task_by_name('task_name')
 
 Now you can start, stop and resume this task
 
@@ -44,15 +54,47 @@ Now you can start, stop and resume this task
     task.stop
     task.resume
 
+You can obtain information about current status by getting task information
+
+    task.status
+
 Finally, results and report can be imported in JSON format
 
     task.results
     task.report
 
+### User
+
+A user is loaded by default when you launch the agent (cf Initialisation). Once logged, you can create another user.
+**Username can't contain spaces**
+
+    OpenVASApi::User.new(name, password, agent)
+
+If you want to visualize all users, you can do
+
+    OpenVASApi::User.users(agent)
+
+To delete a user (except the current user of course)
+
+    OpenVASApi::User.destroy(user_id, agent)
+
+### Other options
+
 User's tasks and targets (both an array) are accessible with these commands
 
-    openvas.user.targets
-    openvas.user.tasks
+    agent.user.targets
+    agent.user.tasks
+
+To remove specific task or target, just do
+
+    agent.user.destroy_task('task_name')
+    agent.user.destroy_target('target_name')
+
+Please notice that you can't remove a task or a target if the scan is running. Moreover, you can't delete a target linked to an existing task. You have to remove it first.
+
+If you want to delete old tasks and only keep three most recents
+
+    agent.user.clean_tasks
 
 ## Development
 
