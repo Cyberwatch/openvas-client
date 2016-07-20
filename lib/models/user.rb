@@ -9,7 +9,6 @@ module OpenVASClient
       @agent = agent
       @name = name
       @password = password
-      @logger = Logger.new(STDOUT)
       if self.class.exist(name, agent)
         import
       else
@@ -75,9 +74,19 @@ module OpenVASClient
 
     def self.users(agent)
       users = Nokogiri::XML(agent.sendrecv('<get_users/>'))
-      users.css('user name').each do |name|
-        logger.info 'User : ' + name.text
+      result = Hash.from_xml(users.to_xml).deep_symbolize_keys
+      logger = Logger.new(STDOUT)
+      result[:get_users_response][:user].each do |user|
+        logger.info 'User => id: ' + user[:id] + ' name: ' + user[:name]
       end
+    end
+
+    def self.destroy(id, agent)
+      user = Nokogiri::XML::Builder.new do |xml|
+        xml.delete_user(user_id: id)
+      end
+      result = Nokogiri::XML(agent.sendrecv(user.to_xml))
+      result.at_xpath('//delete_user_response/@status').text.eql?('200')
     end
 
     def clean_tasks
