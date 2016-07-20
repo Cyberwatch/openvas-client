@@ -59,6 +59,12 @@ module OpenVASClient
       end
     end
 
+    def find_task_by_name(name)
+      tasks.each do |task|
+        return task if task.name.eql?(name)
+      end
+    end
+
     def self.exist(name, agent)
       user = Nokogiri::XML::Builder.new do |xml|
         xml.get_users(filter: "name=#{name}")
