@@ -75,7 +75,7 @@ module OpenVASClient
     # Return results in JSON format
     def results
       content = Nokogiri::XML::Builder.new do |xml|
-        xml.get_results(task_id: id)
+        xml.get_results(filter: "task_id=#{id}", details: 1)
       end
       Hash.from_xml(@agent.sendrecv(content.to_xml)).deep_symbolize_keys
     end
