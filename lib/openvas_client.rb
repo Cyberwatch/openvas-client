@@ -78,6 +78,37 @@ module OpenVASClient
       users.css('scanner')[0][:id]
     end
 
+    def sync
+      logger = Logger.new(STDOUT)
+      sync_cert
+      logger.info 'CERT Synchronisation => Request submitted'
+      sync_feed
+      logger.info 'FEED Synchronisation => Request submitted'
+      sync_scap
+      logger.info 'SCAP Synchronisation => Request submitted'
+    end
+
+    def sync_cert
+      cert = Nokogiri::XML(sendrecv('<sync_cert/>'))
+      unless cert.at_css('sync_cert_response')[:status].eql?('202')
+        raise OpenVASError.new(result.at_css('sync_cert_response')[:status]), result.at_css('sync_cert_response')[:status_text]
+      end
+    end
+
+    def sync_feed
+      feed = Nokogiri::XML(sendrecv('<sync_feed/>'))
+      unless feed.at_css('sync_feed_response')[:status].eql?('202')
+        raise OpenVASError.new(result.at_css('sync_feed_response')[:status]), result.at_css('sync_feed_response')[:status_text]
+      end
+    end
+
+    def sync_scap
+      scap = Nokogiri::XML(sendrecv('<sync_scap/>'))
+      unless scap.at_css('sync_scap_response')[:status].eql?('202')
+        raise OpenVASError.new(result.at_css('sync_scap_response')[:status]), result.at_css('sync_scap_response')[:status_text]
+      end
+    end
+
     def sendrecv(tosend)
       @socket.syswrite(tosend)
 
