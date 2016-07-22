@@ -9,13 +9,12 @@ module OpenVASClient
 
     attr_accessor :user
 
-    def initialize(host = 'localhost', port = 9390, user = 'admin', password = 'openvas')
+    def initialize(host, port, user)
       @host = host
       @port = port
 
       connect
-      authenticate(user, password)
-      @user = OpenVASClient::User.new(user, password, self)
+      authenticate(user.name, user.password)
     end
 
     # set maximum for tasks, targets and users

@@ -5,38 +5,54 @@ module OpenVASClient
     attr_reader :id, :name, :targets, :tasks, :password
 
     # Name can't contain spaces
-    def initialize(name, password, agent)
-      @agent = agent
+    def initialize(name, password)
       @name = name
       @password = password
-      if self.class.exist(name, agent)
-        import
-      else
-        create
-      end
-      @targets = OpenVASClient::Target.import_targets(self, @agent)
-      @tasks = OpenVASClient::Task.import_tasks(self, @agent)
+      @logger = Logger.new(STDOUT)
     end
 
-    def create
+    def connect(agent)
+      if self.class.exist(@name, agent)
+        import(agent)
+      else
+        create(agent)
+      end
+    end
+
+    def populate(agent)
+      @agent = agent
+      @targets = OpenVASClient::Target.import_targets(self, @agent)
+      @tasks = OpenVASClient::Task.import_tasks(self, @agent)
+      agent.user = self
+    end
+
+    def create(agent)
+      role = Nokogiri::XML::Builder.new do |xml|
+        xml.get_roles(filter: 'name=User')
+      end
+      result = Hash.from_xml(agent.sendrecv(role.to_xml)).deep_symbolize_keys
+      role_id = result[:get_roles_response][:role][:id]
+
       user_xml = Nokogiri::XML::Builder.new do |xml|
         xml.create_user do
           xml.name @name
           xml.password @password
+          xml.role(id: role_id)
         end
       end
-      result = Nokogiri::XML(@agent.sendrecv(user_xml.to_xml))
+      result = Nokogiri::XML(agent.sendrecv(user_xml.to_xml))
       unless result.at_css('create_user_response')[:status].eql?('201')
         raise OpenVASError.new(result.at_css('create_user_response')[:status]), result.at_css('create_user_response')[:status_text]
       end
+      @logger.info 'User created in OpenVAS'
       @id = result.at_css('create_user_response')[:id]
     end
 
-    def import
+    def import(agent)
       user = Nokogiri::XML::Builder.new do |xml|
         xml.get_users(filter: "name=#{@name}")
       end
-      result = Hash.from_xml(@agent.sendrecv(user.to_xml)).deep_symbolize_keys
+      result = Hash.from_xml(agent.sendrecv(user.to_xml)).deep_symbolize_keys
       @id = result[:get_users_response][:user][:id]
     end
 
