@@ -127,11 +127,10 @@ module OpenVASClient
     end
 
     def self.import_tasks(user, agent)
-      request = Nokogiri::XML::Builder.new do |xml|
-        xml.get_tasks(filter: "owner.name=#{user.name}")
-      end
+      request = Nokogiri::XML(agent.sendrecv('<get_tasks/>'))
+
       results = []
-      tasks = Hash.from_xml(agent.sendrecv(request.to_xml)).deep_symbolize_keys
+      tasks = Hash.from_xml(request.to_xml).deep_symbolize_keys
       # If there is just one task, it's not an Array
       if tasks[:get_tasks_response][:task].is_a?(Array)
         tasks[:get_tasks_response][:task].each do |task|
@@ -139,7 +138,7 @@ module OpenVASClient
         end
       else
         task = tasks[:get_tasks_response][:task]
-        results << Task.new(task[:name], user.find_target_by_name(task[:target][:name]), agent)
+        results << Task.new(task[:name], user.find_target_by_name(task[:target][:name]), agent) unless task.nil?
       end
       results
     end
