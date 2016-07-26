@@ -93,11 +93,12 @@ module OpenVASClient
       Hash.from_xml(@agent.sendrecv(content.to_xml)).deep_symbolize_keys
     end
 
-    def status
+    def progress
       task = Nokogiri::XML::Builder.new do |xml|
         xml.get_tasks(task_id: id)
       end
-      Hash.from_xml(@agent.sendrecv(task.to_xml)).deep_symbolize_keys
+      result = Hash.from_xml(@agent.sendrecv(task.to_xml)).deep_symbolize_keys
+      result[:get_tasks_response][:task][:progress]
     end
 
     ### Setters ###
