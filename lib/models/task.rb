@@ -143,5 +143,11 @@ module OpenVASClient
       end
       results
     end
+
+    def self.count(agent)
+      request = Nokogiri::XML(agent.sendrecv('<get_tasks/>'))
+      task_count = Hash.from_xml(request.to_xml).deep_symbolize_keys
+      task_count[:get_tasks_response][:task_count].to_i
+    end
   end
 end
