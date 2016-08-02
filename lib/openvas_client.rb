@@ -1,6 +1,9 @@
 require 'openvas_client/version'
 require 'nokogiri'
 require 'active_support/all'
+require 'task'
+require 'target'
+require 'user'
 
 module OpenVASClient
   # Main class which initiate connexion with OpenVAS API
