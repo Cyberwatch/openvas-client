@@ -88,6 +88,13 @@ module OpenVASClient
       end
     end
 
+    def destroy_all_tasks
+      tasks.each do |task|
+        task.destroy
+        tasks.delete(task)
+      end
+    end
+
     def last_task
       @tasks.sort_by(&:creation_time).last
     end
