@@ -72,12 +72,14 @@ module OpenVASClient
       targets.each do |target|
         return target if target.name.eql?(name)
       end
+      nil
     end
 
     def find_task_by_name(name)
       tasks.each do |task|
         return task if task.name.eql?(name)
       end
+      nil
     end
 
     def clean_tasks
