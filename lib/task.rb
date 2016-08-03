@@ -3,6 +3,8 @@ module OpenVASClient
   class Task
     attr_accessor :id, :creation_time, :name
 
+    MAX_RESULTS = 100 # Maximum number of results
+
     def initialize(name, target, agent)
       @agent = agent
       @name = name
@@ -75,7 +77,7 @@ module OpenVASClient
     # Return results in JSON format
     def results
       content = Nokogiri::XML::Builder.new do |xml|
-        xml.get_results(filter: "task_id=#{id}", details: 1)
+        xml.get_results(filter: "first=1 rows=#{MAX_RESULTS} task_id=#{id}", details: 1)
       end
       Hash.from_xml(@agent.sendrecv(content.to_xml)).deep_symbolize_keys
     end
