@@ -19,10 +19,10 @@ module OpenVASClient
       end
     end
 
-    def populate(agent)
+    def populate(agent, max_size)
       @agent = agent
-      @targets = OpenVASClient::Target.import_targets(self, @agent)
-      @tasks = OpenVASClient::Task.import_tasks(self, @agent)
+      @targets = OpenVASClient::Target.import_targets(self, @agent, max_size)
+      @tasks = OpenVASClient::Task.import_tasks(self, @agent, max_size)
       agent.user = self
     end
 

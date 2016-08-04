@@ -92,9 +92,9 @@ module OpenVASClient
       !result[:get_targets_response][:target].nil?
     end
 
-    def self.import_targets(user, agent)
+    def self.import_targets(user, agent, max_targets)
       request = Nokogiri::XML::Builder.new do |xml|
-        xml.get_targets(filter: "owner.name=#{user.name}")
+        xml.get_targets(filter: "first=1 rows=#{max_targets} owner.name=#{user.name}")
       end
       results = []
       targets = Hash.from_xml(agent.sendrecv(request.to_xml)).deep_symbolize_keys
